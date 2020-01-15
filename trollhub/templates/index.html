@@ -17,7 +17,8 @@
       <link rel="stylesheet" href="{{url_for('static', filename='demo.css')}}">
   </head>
   <body>
-      <nav class="navbar navbar-fixed-top navbar-light bg-dark">
+    <div style="visibility:hidden; opacity:0" class="dropzone" id="dropzone">Drop a GeoJSON file here</div>
+      <nav class="navbar navbar-fixed-top navbar-dark bg-dark">
         <a class="navbar-brand" href="#">
           <img src="https://raw.githubusercontent.com/pytroll/pytroll/master/web/source/images/pytroll_dark_small.png" height="30" alt="">
         </a>
@@ -43,14 +44,24 @@
               </div>
           </div>
           <select class="form-control mr-sm-2" id="sourceID">
+            <option>Mongo</option>
             <option>Local archive</option>
             <option>OLDA</option>
             <option>SciHub</option>
             <option>Finnhub</option>
             <option>Collhub@met.no</option>
           </select>
-        <button id="searchbtn" class="btn btn-outline-success my-2 my-sm-0">Search</button>
+        <button id="searchbtn" class="btn btn-primary my-2 my-sm-0">Search</button>
       </form>
+      <div class="dropdown">
+      <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        Search Areas...
+      </button>
+      <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+        <a class="dropdown-item" href="#" id="savelnk">Save</a>
+        <a class="dropdown-item" href="#" id="exportlnk">Export</a>
+      </div>
+    </div>
       </nav>
 
       <div id="map" class="container-fluid"></div>
