@@ -68,7 +68,9 @@ def search():
                 continue
             if req_poly.intersects(footprint):
                 filename = properties['uid']
-                features.append(dict(type='Feature', properties={'id': os.path.basename(filename), 'quicklook': os.path.join(filename, 'preview', 'quick-look.png'), 'pass_direction': properties['pass_direction']}, geometry=mapping(footprint)))
+                features.append(dict(type='Feature', properties={'id': os.path.basename(filename),
+                                                                 'quicklook': os.path.join(filename, 'preview', 'quick-look.png'),
+                                                                 'pass_direction': properties['pass_direction']}, geometry=mapping(footprint)))
 
         return jsonify({'features': features})
 
@@ -77,6 +79,9 @@ def search():
         for doc in docs:
             footprint = doc['boundary']
             id = doc['uid']
+            if 'quicklook' in doc:
+                if doc['quicklook'].startswith('/satnfs'):
+                    doc['quicklook'] = os.path.join('/data/24/saf/', doc['quicklook'][len('/satnfs/'):])
             if 'dataset' in doc:
                 doc['uri'] = doc['dataset'][0]['uri']
             props = {'id': id, 'pass_direction': doc['pass_direction']}
