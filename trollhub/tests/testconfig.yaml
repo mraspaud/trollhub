@@ -1,0 +1,8 @@
+TESTING: true
+SOURCES:
+  tiffs: /tmp/tiffdir/{start_time:%Y%m%d%H%M%S}_{platform}_{sar_mode}_{polarization:2s}_{resolution}m.tif
+  mongo: mongodb://mymongoserver:27017/
+  safes: /tmp/safedir/{mission_id:3s}_{sar_mode:2s}_{product_type:3s}{resolution:1s}_{processing_level:1s}{product_class:1s}{polarization:2s}_{start_time:%Y%m%dT%H%M%S}_{end_time:%Y%m%dT%H%M%S}_{orbit_number:6d}_{mission_data_take_id:6s}_{product_unique_id:4s}.SAFE/manifest.safe
+BASECOORDS:
+  lon: 20
+  lat: 64

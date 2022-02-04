@@ -1,42 +1,33 @@
 
 import os
 from datetime import datetime
+import trollsift
 
-from flask import Flask, jsonify, render_template, request, send_file
+from flask import Flask, jsonify, render_template, request, send_file, abort
+import logging
+
+logger = logging.getLogger('trollhub')
 
 app = Flask(__name__)
 
-BASECOORDS = [-13.9626, 33.7741]
+allowed_urls = set()
 
 
 @app.route('/')
 def index():
     """Index."""
-    return render_template('index.html')
-
-
-@app.route('/getFile/<int:file_id>') # this is a job for GET, not POST
-def get_file(file_id):
-    """Get the file."""
-    print('File requested: %d'%file_id)
-    return jsonify(file_id)
-
-
-@app.route('/getFile2', methods=['POST']) # this is a job for GET, not POST
-def get_file2():
-    """Get the file."""
-    data = request.form['javascript_data']
-
-    print('thedata')
-    print(data)
-    return data
+    source_list = app.config["SOURCES"].keys()
+    base_coords = app.config["BASECOORDS"]
+    return render_template('index.html', source_list=source_list,
+                           center_lon=base_coords["lon"],
+                           center_lat=base_coords["lat"])
 
 
 @app.route('/search', methods=['POST'])
 def search():
     """Search matching passes."""
     from shapely.geometry import shape, mapping
-    print(request.json)
+    logger.warning(str(request.json))
     js = request.json
 
     polygons = []
@@ -51,67 +42,67 @@ def search():
     end_time = js['end_time']
     end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
 
-    from shapely.ops import cascaded_union
-    req_poly = cascaded_union(polygons)
+    from shapely.ops import unary_union
+    req_poly = unary_union(polygons)
 
     features = []
-    search_funs = {'Local archive': search_local_safe,
-                   'Mongo': search_mongo}
-    search_fun = search_funs.get(js['sourceID'], None)
-
-    if search_fun is None:
+    try:
+        db_access = app.config["SOURCES"][js['sourceID']]
+    except KeyError:
         return jsonify({})
 
-    if js['sourceID'] == "Local archive":
-        for footprint, properties in search_fun():
-            if (properties['start_time'] > end_time) or (properties['end_time'] < start_time):
-                continue
-            if req_poly.intersects(footprint):
-                filename = properties['uid']
-                features.append(dict(type='Feature', properties={'id': os.path.basename(filename),
-                                                                 'quicklook': os.path.join(filename, 'preview', 'quick-look.png'),
-                                                                 'pass_direction': properties['pass_direction']}, geometry=mapping(footprint)))
+    if db_access.endswith(".tif"):
+        search_fun = search_local_tiffs
+    elif db_access.endswith(".safe"):
+        search_fun = search_local_safe
+    elif ":" in db_access:
+        search_fun = search_mongo
+    else:
+        logger.error("Unrecognize db type: %s", db_access)
+        return jsonify({})
 
-        return jsonify({'features': features})
+    global allowed_urls
+    allowed_urls = set()
 
-    elif js['sourceID'] == 'Mongo':
-        docs = search_mongo(start_time, end_time)
-        for doc in docs:
-            footprint = doc['boundary']
-            id = doc['uid']
-            if 'quicklook' in doc:
-                if doc['quicklook'].startswith('/satnfs'):
-                    doc['quicklook'] = os.path.join('/data/24/saf/', doc['quicklook'][len('/satnfs/'):])
-            if 'dataset' in doc:
-                doc['uri'] = doc['dataset'][0]['uri']
-            props = {'id': id, 'pass_direction': doc['pass_direction']}
-            for optional in ['uri', 'quicklook']:
-                try:
-                    props[optional] = doc[optional]
-                except KeyError:
-                    pass
-            features.append(dict(type='Feature', properties=props, geometry=footprint))
-
-        return jsonify({'features': features})
+    for footprint, properties in search_fun(db_access, start_time, end_time):
+        if req_poly.is_empty or req_poly.intersects(footprint):
+            feature = dict(type='Feature', properties=properties,
+                           geometry=mapping(footprint))
+            if "quicklook" in properties:
+                allowed_urls.add(properties['quicklook'])
+            features.append(feature)
+    return jsonify({'features': features})
 
 
-def search_mongo(start_time, end_time):
+def search_mongo(db_access, start_time, end_time):
     """Search from a mongo db."""
     from pymongo import MongoClient
-    client = MongoClient(app.config['mongo_uri'])
+    from shapely import geometry
+    client = MongoClient(db_access)
     docs = client.sat_db.files
-    return docs.find({'start_time': {'$lte': end_time},
+    docs = docs.find({'start_time': {'$lte': end_time},
                       'end_time': {'$gte': start_time},
-                      'sensor': 'sar-c'})
+                      'sensor': 'sar-c',
+                      'format': 'SAFE',})
+    for doc in docs:
+        poly = geometry.Polygon(doc["boundary"]["coordinates"][0])
+
+        properties = {"id": doc["uid"],
+                      "pass_direction": doc["pass_direction"],
+                      "quicklook": doc["quicklook"],
+                      "start_time": doc["start_time"],
+                      "end_time": doc["end_time"]}
+        yield poly, properties
 
 
-def search_local_safe():
+def search_local_safe(pattern, req_start_time, req_end_time):
     """Search locally."""
     import xml.etree.ElementTree as ET
     import glob
     from shapely import geometry
-    #safe_files = glob.glob('/home/a001673/data/satellite/Sentinel-1/*/*.safe')
-    safe_files = glob.glob('/data/24/saf/polar_in/sentinel1/sar-c/lvl1/*/*.safe')
+    parser = trollsift.Parser(pattern)
+    safe_files = glob.glob(parser.globify())
+
     for safe_file in safe_files:
         my_namespaces = dict([
               node for _, node in ET.iterparse(
@@ -121,16 +112,53 @@ def search_local_safe():
 
         tree = ET.parse(safe_file)
         root = tree.getroot()
-        #root.find('*//safe:footPrint', my_namespaces)
-        coords = root.find('*//safe:footPrint/gml:coordinates', my_namespaces).text.split()
-        footprint = [[float(x) for x in elt.split(',')] for elt in coords]
-        poly = geometry.Polygon([[p[1], p[0]] for p in footprint])
-        pass_direction = root.find('*//s1:orbitProperties/s1:pass', my_namespaces).text.strip()
+
         start_time = root.find('*//safe:acquisitionPeriod/safe:startTime', my_namespaces).text.strip()
         start_time = datetime.strptime(start_time, '%Y-%m-%dT%H:%M:%S.%f')
         end_time = root.find('*//safe:acquisitionPeriod/safe:stopTime', my_namespaces).text.strip()
         end_time = datetime.strptime(end_time, '%Y-%m-%dT%H:%M:%S.%f')
-        properties = dict(uid=os.path.dirname(safe_file),
+
+        if (start_time > req_end_time) or (end_time < req_start_time):
+            continue
+
+        pass_direction = root.find('*//s1:orbitProperties/s1:pass', my_namespaces).text.strip()
+        quicklook_path = os.path.join(os.path.dirname(safe_file), 'preview', 'quick-look.png')
+        coords = root.find('*//safe:footPrint/gml:coordinates', my_namespaces).text.split()
+        footprint = [[float(x) for x in elt.split(',')] for elt in coords]
+        poly = geometry.Polygon([[p[1], p[0]] for p in footprint])
+
+
+        properties = dict(id=os.path.basename(os.path.dirname(safe_file)),
+                          quicklook=quicklook_path,
+                          pass_direction=pass_direction,
+                          start_time=start_time,
+                          end_time=end_time)
+
+        yield poly, properties
+
+
+def search_local_tiffs(pattern, req_start_time, req_end_time):
+    """Search locally."""
+    import glob
+    from shapely import geometry
+    from osgeo import gdal
+    parser = trollsift.Parser(pattern)
+    files = glob.glob(parser.globify())
+
+    for pathname in files:
+        mda = parser.parse(pathname)
+
+        pass_direction = 'ascending'
+
+        end_time = start_time = mda["start_time"]
+
+        if (start_time > req_end_time) or (end_time < req_start_time):
+            continue
+
+        info = gdal.Info(pathname, format='json')
+        poly = geometry.shape(info['wgs84Extent'])
+
+        properties = dict(id=os.path.basename(pathname),
                           pass_direction=pass_direction,
                           start_time=start_time,
                           end_time=end_time)
@@ -141,14 +169,28 @@ def search_local_safe():
 @app.route('/<path:path>')
 def catch_all(path):
     """Catch all function."""
-    print('You want path: %s' % path)
-    return send_file(os.path.join('/', path))
+    path = os.path.join('/', path)
+    if path not in allowed_urls:
+        abort(404)
+    return send_file(path)
+
+
+def create_app(config):
+    if isinstance(config, dict):
+        app.config.update(config)
+    else:
+        import yaml
+        with open(config) as fd:
+            mapping = yaml.safe_load(fd.read())
+            app.config.from_mapping(mapping)
+    return app
 
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
-    parser.add_argument('-m', '--mongo-uri')
+
+    parser.add_argument('-c', '--config')
     args = parser.parse_args()
-    app.config['mongo_uri'] = args.mongo_uri
-    app.run(host='0.0.0.0', debug=True)
+    app = create_app(args.config)
+    app.run(host='0.0.0.0')
