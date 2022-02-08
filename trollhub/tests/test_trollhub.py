@@ -8,7 +8,6 @@ import datetime
 
 @pytest.fixture
 def client():
-    #app = create_app({'TESTING': True})
     pathname = os.path.join(os.path.dirname(__file__), "testconfig.yaml")
     app = create_app(pathname)
     with app.test_client() as client:
@@ -24,8 +23,25 @@ def test_index(client):
     assert response.status_code == 200
     assert response.data.startswith(b"<html>")
 
+
+def test_source_keys_in_index_drop_down_menu(client):
+    response = client.get("/", content_type="html/text")
+
+    assert response.status_code == 200
+    for key in client.application.config["SOURCES"]:
+        assert "<option>" + key + "</option>" in str(response.data)
+
+
 def test_config_is_read(client):
     assert "SOURCES" in client.application.config
+
+def test_configured_center_position_is_used(client):
+    response = client.get("/", content_type="html/text")
+
+    assert response.status_code == 200
+    assert b"center-lon=20" in response.data
+    assert b"center-lat=64" in response.data
+
 
 class TestSearch:
 
@@ -59,7 +75,7 @@ class TestSearch:
                                                                    [18.168846, 52.048065]]],
                                                   'type': 'Polygon'},
                                      'properties': {'id': 'S1A_IW_GRDH_1SDV_20220203T050856_20220203T050921_041744_04F7A3_E41E.SAFE',  # noqa
-                                                    'pass_direction': 'DESCENDING',
+                                                    'pass_direction': 'descending',
                                                     'quicklook': '/tmp/safedir/S1A_IW_GRDH_1SDV_20220203T050856_20220203T050921_041744_04F7A3_E41E.SAFE/preview/quick-look.png'},  # noqa
                                      'type': 'Feature'}]}
 
@@ -74,103 +90,103 @@ class TestSearch:
                         'orbit_number': 41736, 'random_string1': '04F765', 'random_string2': 'E57A',
                         'dataset':
                             [{
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE-report-20220202T164128.pdf',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE-report-20220202T164128.pdf',
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE-report-20220202T164128.pdf',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE-report-20220202T164128.pdf',  # noqa
                                  'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE'}, {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/calibration-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration/noise-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/calibration'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi/rfi-s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/rfi'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.xml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/annotation'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/manifest.safe',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/manifest.safe',
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/manifest.safe',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/manifest.safe',  # noqa
                                  'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE'}, {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.tiff',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.tiff',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.tiff',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vh-20220202t154011-20220202t154040-041736-04f765-002.tiff',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.tiff',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.tiff',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.tiff',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement/s1a-iw-grd-vv-20220202t154011-20220202t154040-041736-04f765-001.tiff',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/measurement'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/icons/logo.png',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/icons/logo.png',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/icons'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/icons/logo.png',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/icons/logo.png',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/icons'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/map-overlay.kml',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/map-overlay.kml',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/map-overlay.kml',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/map-overlay.kml',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/product-preview.html',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/product-preview.html',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/product-preview.html',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/product-preview.html',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-calibration.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-calibration.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-calibration.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-calibration.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-measurement.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-measurement.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-measurement.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-measurement.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-noise.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-noise.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-noise.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-noise.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-product.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-product.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-product.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-product.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-quicklook.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-quicklook.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-quicklook.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-quicklook.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-rfi.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-rfi.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-rfi.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-level-1-rfi.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-map-overlay.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-map-overlay.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-map-overlay.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-map-overlay.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-object-types.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-object-types.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-object-types.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-object-types.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'},  # noqa
                              {
-                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-product-preview.xsd',
-                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-product-preview.xsd',
-                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'}],
+                                 'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-product-preview.xsd',  # noqa
+                                 'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support/s1-product-preview.xsd',  # noqa
+                                 'path': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/support'}],  # noqa
                         'sensor': 'sar-c',
                         'uid': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/',
                         'format': 'SAFE', 'pass_direction': 'ascending', 'boundary': {'type': 'Polygon',
@@ -179,7 +195,7 @@ class TestSearch:
                                                                                            [32.151646, 60.183868],
                                                                                            [32.67691, 58.452579],
                                                                                            [28.390108, 58.038574]]]},
-                        'quicklook': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png'}]
+                        'quicklook': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png'}]  # noqa
 
         mongoclient.return_value.sat_db.files.find.return_value = find_result
 
@@ -189,12 +205,12 @@ class TestSearch:
         assert rv.status_code == 200
         res = json.loads(rv.data)
         assert res == {'features': [{'geometry': {'coordinates': [
-            [[27.646376, 59.761978], [32.151646, 60.183868], [32.67691, 58.452579], [28.390108, 58.038574]]],
+            [[27.646376, 59.761978], [32.151646, 60.183868], [32.67691, 58.452579],
+             [28.390108, 58.038574], [27.646376, 59.761978]]],
                                                   'type': 'Polygon'}, 'properties': {
             'id': 'S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/',
             'pass_direction': 'ascending',
-            'quicklook': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png',
-            'uri': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE-report-20220202T164128.pdf'},
+            'quicklook': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png'},  # noqa
                                      'type': 'Feature'}]}
 
 

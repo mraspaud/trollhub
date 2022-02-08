@@ -89,9 +89,7 @@ def search_mongo(db_access, start_time, end_time):
 
         properties = {"id": doc["uid"],
                       "pass_direction": doc["pass_direction"],
-                      "quicklook": doc["quicklook"],
-                      "start_time": doc["start_time"],
-                      "end_time": doc["end_time"]}
+                      "quicklook": doc["quicklook"]}
         yield poly, properties
 
 
@@ -130,9 +128,7 @@ def search_local_safe(pattern, req_start_time, req_end_time):
 
         properties = dict(id=os.path.basename(os.path.dirname(safe_file)),
                           quicklook=quicklook_path,
-                          pass_direction=pass_direction,
-                          start_time=start_time,
-                          end_time=end_time)
+                          pass_direction=pass_direction.lower())
 
         yield poly, properties
 
@@ -159,9 +155,7 @@ def search_local_tiffs(pattern, req_start_time, req_end_time):
         poly = geometry.shape(info['wgs84Extent'])
 
         properties = dict(id=os.path.basename(pathname),
-                          pass_direction=pass_direction,
-                          start_time=start_time,
-                          end_time=end_time)
+                          pass_direction=pass_direction)
         yield poly, properties
 
 
