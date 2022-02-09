@@ -4,9 +4,6 @@ from datetime import datetime
 import trollsift
 
 from flask import Flask, jsonify, render_template, request, send_file, abort
-import logging
-
-logger = logging.getLogger('trollhub')
 
 app = Flask(__name__)
 
@@ -27,7 +24,7 @@ def index():
 def search():
     """Search matching passes."""
     from shapely.geometry import shape, mapping
-    logger.warning(str(request.json))
+    app.logger.info(str(request.json))
     js = request.json
 
     polygons = []
@@ -58,7 +55,7 @@ def search():
     elif ":" in db_access:
         search_fun = search_mongo
     else:
-        logger.error("Unrecognize db type: %s", db_access)
+        app.logger.error("Unrecognize db type: %s", db_access)
         return jsonify({})
 
     global allowed_urls

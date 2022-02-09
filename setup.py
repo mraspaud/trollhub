@@ -6,6 +6,8 @@ setup(
     packages=['trollhub'],
     include_package_data=True,
     install_requires=[
-        'flask', 'pyyaml', 'trollsift',
+        'flask', 'pyyaml', 'trollsift', 'waitress',
     ],
+    scripts=['bin/start-trollhub.py', ],
+
 )
