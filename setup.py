@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='trollhub',
-    version='0.0.4',
+    version='0.1.0',
     packages=['trollhub'],
     include_package_data=True,
     install_requires=[
