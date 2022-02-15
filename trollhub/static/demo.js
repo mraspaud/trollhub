@@ -99,23 +99,10 @@ function draw_pass(data) {
 }
 
 function searchfun() {
-            // $.getJSON('/search',
-            //     JSON.stringify({'data': lastfeature.toGeoJSON()}),
-            //     function(data) {
-            //       L.geoJSON(data, {
-            //         onEachFeature: function (feature, layer) {
-            //           layer.bindPopup('<h1>'+feature.properties.id+'</h1><p>here a nice quicklook</p>');
-            //         }
-            //         // style: function(feature) {
-            //         //   switch (feature.properties.party) {
-            //         //     case 'Republican': return {color: "#ff0000"};
-            //         //     case 'Democrat':   return {color: "#0000ff"};
-            //         //   }
-            //         // }
-            //       }).addTo(map);
-            // });
-            var json_data = drawnItems.toGeoJSON()
-            json_data['sourceID'] = document.forms['searchform']['sourceID'].value
+
+            var json_data = drawnItems.toGeoJSON();
+            json_data['sourceID'] = $('#sourceID').val();
+            console.log(json_data['sourceID']);
             json_data['start_time'] = $("#datetimepicker7").datetimepicker('viewDate');
             json_data['end_time'] = $("#datetimepicker8").datetimepicker('viewDate');
             $.ajax({
@@ -159,22 +146,7 @@ function getCookie(cname) {
 function saveareas() {
             var json_data = drawnItems.toGeoJSON()
             setCookie("search_areas", JSON.stringify(json_data), 36500)
-            // json_data['sourceID'] = document.forms['searchform']['sourceID'].value
-            // json_data['start_time'] = $("#datetimepicker7").datetimepicker('viewDate');
-            // json_data['end_time'] = $("#datetimepicker8").datetimepicker('viewDate');
-            // $.ajax({
-            //   dataType: "json",
-            //   url: '/search',
-            //   type: 'POST',
-            //   contentType : 'application/json',
-            //   //data: JSON.stringify({'poly': lastfeature.toGeoJSON()}),
-            //   data: JSON.stringify(json_data),
-            //   //data: JSON.stringify({'bla': 'bli'}),
-            //   success: draw_pass});
-            // segmentItems.clearLayers();
-            // event.preventDefault();
-            // document.getElementById("savebtn").classList.remove('btn-outline-primary');
-            // document.getElementById("savebtn").classList.add('btn-outline-success');
+
             return false;
           }
 
@@ -275,33 +247,4 @@ el.onclick = exportfun;
 var el = document.getElementById('savelnk');
 el.onclick = saveareas;
 
-// + function($) {
-//     'use strict';
-//
-//     // UPLOAD CLASS DEFINITION
-//     // ======================
-//
-//     var dropZone = document.getElementById('dropzone');
-//
-//     var startUpload = function(files) {
-//         var reader = new FileReader();
-//         reader.onload = function(e) {
-//           var contents = e.target.result;
-//           var gjson = JSON.parse(contents);
-//           L.geoJSON(gjson).addTo(drawnItems);
-//         };
-//         reader.readAsText(files[0]);
-//         console.log(files)
-//     }
-//
-//     dropZone.ondrop = function(e) {
-//         e.preventDefault();
-//         startUpload(e.dataTransfer.files)
-//         console.log('dropped');
-//     }
-//
-//     dropZone.ondragover = function() {
-//         e.preventDefault();
-//         return false;
-//     }
-// }(jQuery);
+

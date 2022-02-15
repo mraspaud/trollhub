@@ -43,32 +43,35 @@ def search():
     req_poly = unary_union(polygons)
 
     features = []
-    try:
-        db_access = app.config["SOURCES"][js['sourceID']]
-    except KeyError:
-        return jsonify({})
+    for source_id in js['sourceID']:
+        try:
+            db_access = app.config["SOURCES"][source_id]
+        except KeyError:
+            continue
 
-    if db_access.endswith(".tif"):
-        search_fun = search_local_tiffs
-    elif db_access.endswith(".safe"):
-        search_fun = search_local_safe
-    elif ":" in db_access:
-        search_fun = search_mongo
-    else:
-        app.logger.error("Unrecognize db type: %s", db_access)
-        return jsonify({})
+        if db_access.endswith(".tif"):
+            search_fun = search_local_tiffs
+        elif db_access.endswith(".safe"):
+            search_fun = search_local_safe
+        elif ":" in db_access:
+            search_fun = search_mongo
+        else:
+            app.logger.error("Unrecognized db type: %s", db_access)
+            continue
 
-    global allowed_urls
-    allowed_urls = set()
+        global allowed_urls
+        allowed_urls = set()
 
-    for footprint, properties in search_fun(db_access, start_time, end_time):
-        if req_poly.is_empty or req_poly.intersects(footprint):
-            feature = dict(type='Feature', properties=properties,
-                           geometry=mapping(footprint))
-            if "quicklook" in properties:
-                allowed_urls.add(properties['quicklook'])
-            features.append(feature)
-    return jsonify({'features': features})
+        for footprint, properties in search_fun(db_access, start_time, end_time):
+            if req_poly.is_empty or req_poly.intersects(footprint):
+                feature = dict(type='Feature', properties=properties,
+                               geometry=mapping(footprint))
+                if "quicklook" in properties:
+                    allowed_urls.add(properties['quicklook'])
+                features.append(feature)
+    if features:
+        return jsonify({'features': features})
+    return jsonify({})
 
 
 def search_mongo(db_access, start_time, end_time):

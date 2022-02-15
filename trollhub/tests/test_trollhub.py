@@ -52,7 +52,7 @@ class TestSearch:
         shutil.copytree(os.path.join(os.path.dirname(__file__), 'safedir'), self.safedir)
 
     def test_search_tiffs(self, client):
-        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': 'tiffs',
+        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': ['tiffs'],
                     'start_time': '2022-02-02T11:52:00.000Z', 'end_time': '2022-02-04T11:52:00.000Z'}
         rv = client.post('/search', data=json.dumps(req_dict), content_type='application/json')
         assert rv.status_code == 200
@@ -65,7 +65,7 @@ class TestSearch:
                                      'type': 'Feature'}]}
 
     def test_search_safes(self, client):
-        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': 'safes',
+        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': ['safes'],
                     'start_time': '2022-02-02T11:52:00.000Z', 'end_time': '2022-02-04T11:52:00.000Z'}
         rv = client.post('/search', data=json.dumps(req_dict), content_type='application/json')
         assert rv.status_code == 200
@@ -199,7 +199,7 @@ class TestSearch:
 
         mongoclient.return_value.sat_db.files.find.return_value = find_result
 
-        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': 'mongo',
+        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': ['mongo'],
                     'start_time': '2022-02-02T11:52:00.000Z', 'end_time': '2022-02-04T11:52:00.000Z'}
         rv = client.post('/search', data=json.dumps(req_dict), content_type='application/json')
         assert rv.status_code == 200
@@ -213,6 +213,13 @@ class TestSearch:
             'quicklook': '/satnfs/polar_in/sentinel1/sar-c/lvl1/S1A_IW_GRDH_1SDV_20220202T154011_20220202T154040_041736_04F765_E57A.SAFE/preview/quick-look.png'},  # noqa
                                      'type': 'Feature'}]}
 
+    def test_search_tiffs_and_safes(self, client):
+        req_dict = {'type': 'FeatureCollection', 'features': [], 'sourceID': ['tiffs', 'safes'],
+                    'start_time': '2022-02-02T11:52:00.000Z', 'end_time': '2022-02-04T11:52:00.000Z'}
+        rv = client.post('/search', data=json.dumps(req_dict), content_type='application/json')
+        assert rv.status_code == 200
+        res = json.loads(rv.data)
+        assert len(res["features"]) == 2
 
     def teardown(self):
         shutil.rmtree(self.tiffdir)
