@@ -40,11 +40,13 @@ map.addControl(new L.Control.Draw({
   }
 }));
 
+function noop(event) {}
+
 map.on(L.Draw.Event.CREATED, function(e) {
   var type = e.layerType,
     layer = e.layer;
 
-  layer.on('click', doWork);
+  layer.on('click', noop);
   lastfeature = layer;
   drawnItems.addLayer(layer);
 });
